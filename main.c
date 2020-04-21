@@ -84,13 +84,11 @@ void writeFile(Datos * archivoEnOctal, char *nombreArchivo)
 // Deben desarrollar esta funcion en su totalidad.
 void convertirABinario(Datos * datosOct, Datos * datosBin)
 {
-	int valor=datosOct->tamanio;
-	unsigned char *datosArchivoOctal=datosOct->informacion;
-	datosArchivoOctal[valor]='\0';
-	printf("\nLos datos octales son: %s \n", datosArchivoOctal);
-	printf("\nLongitud de la cadena: %d \n", valor);
-	int numCeros=8-((valor*3)%8);
-	unsigned char arreglo[(3*valor)+numCeros+1];
+	int valor=datosOct->tamanio; //Tamaño del arreglo del archivo octal.
+	int numCeros=8-(3*valor%8); //Número de ceros para completar octetos.
+	//Arreglo de caracteres que guardará la traducción a binario del archivo octal.
+	char *arreglo = (unsigned char *)calloc((3*valor+numCeros), sizeof(unsigned char));
+	//for que recorre de a 3 posiciones el arreglo por cada dígito octal leído. Guarda en estas posiciones según sea necesaria la traducción. (i.e) Si llega 7, guarda "111".
 	for(int i=0; i<(3*valor);i=i+3)
 	{
 		int actual=datosOct->informacion[i/3] -'0';
@@ -98,77 +96,50 @@ void convertirABinario(Datos * datosOct, Datos * datosBin)
 		arreglo[i+1]=actual==0?'0':actual==1?'0':actual==2?'1':actual==3?'1':actual==4?'0':actual==5?'0':actual==6?'1':'1';
 		arreglo[i+2]=actual==0?'0':actual==1?'1':actual==2?'0':actual==3?'1':actual==4?'0':actual==5?'1':actual==6?'0':'1';
 	}
-  	for(int i=0; i<numCeros;++i)
+	//Número de ceros al final de la cadena para completar octetos.
+	for(int i=0; i<numCeros;++i)
     {
         arreglo[(3*valor)+i]=('0');
     }
-	arreglo[(3*valor)+numCeros]='\0';
-	printf("\n%s ",arreglo);
-	printf("\nLongitud del arreglo: %d", strlen(arreglo));
-	datosBin->tamanio=((3*valor)+numCeros)/8;
-	unsigned char arregloCaracteresBin[((3*valor)+numCeros)/8];
-	int contador=0;
-	int contadorPosicionesArreglo=0;
-	unsigned char subArreglo[8];
-	for(int i=0; i<(3*valor)+numCeros;++i)
-	{
-		subArreglo[contador]=arreglo[i];
-		++contador;
-		if(contador==8)
+	//for que transforma octetos binarios en caracteres. Realizo operador OR entre bits y busca en la tabla ascii el valor correspondiente. Recorre de a 8 porque son octetos. Finalmente agrega el valor a la información.
+	for(int i=0; i<(3*valor+numCeros);i=i+8)
+	{	
+		char caracter='\0';
+		if(arreglo[i]=='1')
 		{
-			subArreglo[8]='\0';
-			contador=0;
-			for(int j=0; j<=255;++j)
-			{
-				int posicionAscii=j;
-    			unsigned char binarioPosicion[8];
-				itoa(posicionAscii, binarioPosicion,2);
-				unsigned char binarioPosicionInvertido[8];
-				int numCerosBin=8-strlen(binarioPosicion);
-				if(numCerosBin!=0)
-    			{		
-					int i;
-    				for(i=0; i<(8-strlen(binarioPosicion));++i)
-    				{
-      					binarioPosicionInvertido[i]='0';
-    				}
-    				int contador=0;
-   					for(i; i<8;++i)
-    				{
-        				binarioPosicionInvertido[i]=binarioPosicion[contador];
-       					++contador;
-    				}
-				}
-				else
-				{
-					for(int i=0;i<8;++i)
-        			{
-           				binarioPosicionInvertido[i]=binarioPosicion[i];
-        			}
-				}
-				
-				binarioPosicionInvertido[8]='\0';
-				if(strcmp(subArreglo, binarioPosicionInvertido) == 0)
-				{	
-					unsigned char ascii=posicionAscii;
-					arregloCaracteresBin[contadorPosicionesArreglo]=ascii;
-					++contadorPosicionesArreglo;
-				    printf("\nSubarreglo: %s",subArreglo);
-					printf(" Valor ascii: %c\n",ascii);
-				}
-			}
+			caracter=128;
 		}
+		if(arreglo[i+1]=='1')
+		{
+			caracter=caracter^(64);
+		}
+		if(arreglo[i+2]=='1')
+		{
+			caracter=caracter^(32);
+		}
+		if(arreglo[i+3]=='1')
+		{
+			caracter=caracter^(16);
+		}
+		if(arreglo[i+4]=='1')
+		{
+			caracter=caracter^(8);
+		}
+		if(arreglo[i+5]=='1')
+		{
+			caracter=caracter^(4);
+		}
+		if(arreglo[i+6]=='1')
+		{
+			caracter=caracter^(2);
+		}
+		if(arreglo[i+7]=='1')
+		{
+			caracter=caracter^(1);
+		}
+		datosBin->informacion[i/8]=caracter;
 	}
-	arregloCaracteresBin[((3*valor)+numCeros)/8]='\0';
-	arreglo[(3*valor)+1]='\0';
-	datosBin->tamanio=strlen(arregloCaracteresBin);
-	for(int i=0; i<datosBin->tamanio;++i)
-	{
-		datosBin->informacion[i]=arregloCaracteresBin[i];
-	}
-    printf("\nLongitud de caracteres=%d\n", datosBin->tamanio);
-    printf("\nCadena de caracteres=%s\n", arregloCaracteresBin); 
-    //TODO: COMPLETAR EL DESARROLLO DE LA FUNCION.
+	//TODO: COMPLETAR EL DESARROLLO DE LA FUNCION.
 }
 
 //-- Funcion main de la aplicacion
@@ -204,3 +175,4 @@ int main()
 	system("PAUSE");
 	return 0;
 }
+
